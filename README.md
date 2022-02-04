@@ -50,7 +50,17 @@ const linkedinStrategy = new LinkedinStrategy(
       callbackURL: "https://example.com/auth/linkedin/callback";
    },
    async ({accessToken, refreshToken, extraParams, profile, context}) => {
-      // Check the LinkedinProfile type to see how the `profile` looks like.
+      /*
+         profile:
+         type LinkedinProfile = {
+            id: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            picture: string;
+            _json: LiteProfileData & EmailData;
+         } & OAuth2Profile;
+      */
 
       // Get the user data from your DB or API using the tokens and profile
       return User.findOrCreate({ email: profile.email });
