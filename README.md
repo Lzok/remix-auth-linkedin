@@ -54,16 +54,19 @@ const linkedinStrategy = new LinkedinStrategy(
          profile:
          type LinkedinProfile = {
             id: string;
-            firstName: string;
-            lastName: string;
-            email: string;
-            picture: string;
+            displayName: string;
+            name: {
+               givenName: string;
+               familyName: string;
+            };
+            emails: Array<{ value: string }>;
+            photos: Array<{ value: string }>;
             _json: LiteProfileData & EmailData;
          } & OAuth2Profile;
       */
 
       // Get the user data from your DB or API using the tokens and profile
-      return User.findOrCreate({ email: profile.email });
+      return User.findOrCreate({ email: profile.emails[0].value });
    }
 );
 

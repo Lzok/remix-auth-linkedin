@@ -200,12 +200,19 @@ export type LinkedinStrategyVerifyParams = {
   state: string;
 } & Record<string, string | number>;
 
+/**
+ * In order to be complaint with the OAuth2Profile type as much as possible
+ * based on the information Linkedin gives us.
+ */
 export type LinkedinProfile = {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  picture: string;
+  displayName: string;
+  name: {
+    givenName: string;
+    familyName: string;
+  };
+  emails: Array<{ value: string }>;
+  photos: Array<{ value: string }>;
   _json: LiteProfileData & EmailData;
 } & OAuth2Profile;
 
@@ -299,12 +306,19 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
     const data = {
       provider: this.name,
       id: baseData.id,
-      firstName: baseData.localizedFirstName,
-      lastName: baseData.localizedLastName,
-      email: emailData?.elements?.[0]?.["handle~"]?.emailAddress,
-      picture:
-        baseData.profilePicture?.["displayImage~"]?.elements?.[0]
-          ?.identifiers?.[0]?.identifier,
+      displayName: `${baseData.localizedFirstName} ${baseData.localizedLastName}`,
+      name: {
+        givenName: baseData.localizedFirstName,
+        familyName: baseData.localizedLastName,
+      },
+      emails: [{ value: emailData?.elements?.[0]?.["handle~"]?.emailAddress }],
+      photos: [
+        {
+          value:
+            baseData.profilePicture?.["displayImage~"]?.elements?.[0]
+              ?.identifiers?.[0]?.identifier,
+        },
+      ],
       _json: { ...baseData, ...emailData },
     };
 
