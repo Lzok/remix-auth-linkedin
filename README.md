@@ -1,37 +1,6 @@
-# Remix Auth - Strategy Template
+# LinkedinStrategy
 
-> A template for creating a new Remix Auth strategy.
-
-If you want to create a new strategy for Remix Auth, you could use this as a template for your repository.
-
-The repo installs the latest version of Remix Auth and do the setup for you to have tests, linting and typechecking.
-
-## How to use it
-
-1. In the `package.json` change `name` to your strategy name, also add a description and ideally an author, repository and homepage keys.
-2. In `src/index.ts` change the `MyStrategy` for the strategy name you want to use.
-3. Implement the strategy flow inside the `authenticate` method. Use `this.success` and `this.failure` to correctly send finish the flow.
-4. In `tests/index.test.ts` change the tests to use your strategy and test it. Inside the tests you have access to `jest-fetch-mock` to mock any fetch you may need to do.
-5. Once you are ready, set the secrets on Github
-   - `NPM_TOKEN`: The token for the npm registry
-   - `GIT_USER_NAME`: The you want the bump workflow to use in the commit.
-   - `GIT_USER_EMAIL`: The email you want the bump workflow to use in the commit.
-
-## Scripts
-
-- `build`: Build the project for production using the TypeScript compiler (strips the types).
-- `typecheck`: Check the project for type errors, this also happens in build but it's useful to do in development.
-- `lint`: Runs ESLint againt the source codebase to ensure it pass the linting rules.
-- `test`: Runs all the test using Jest.
-
-## Documentations
-
-To facilitate creating a documentation for your strategy, you can use the following Markdown
-
-```markdown
-# Strategy Name
-
-<!-- Description -->
+The Linkedin strategy is used to authenticate users against a Linkedin account. It extends the [OAuth2Strategy](https://github.com/sergiodxa/remix-auth-oauth2).
 
 ## Supported runtimes
 
@@ -40,9 +9,90 @@ To facilitate creating a documentation for your strategy, you can use the follow
 | Node.js    | ✅          |
 | Cloudflare | ✅          |
 
-<!-- If it doesn't support one runtime, explain here why -->
 
-## How to use
+## Usage
 
-<!-- Explain how to use the strategy, here you should tell what options it expects from the developer when instantiating the strategy -->
+### Create an OAuth application
+
+First you need to create a new application in the [Linkedin's developers page](https://developer.linkedin.com/). Then I encourage you to read [this documentation page](https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow?tabs=HTTPS#prerequisites), it explains how to configure your app and gives you useful information on the auth flow.
+The app is mandatory in order to obtain a `clientID` and `client secret` to use with the Linkedin's API.
+
+### Create the strategy instance
+
+```ts
+// linkedin.server.ts
+import { createCookieSessionStorage } from 'remix';
+import { Authenticator } from 'remix-auth';
+import { LinkedinStrategy } from "remix-auth-linkedin";
+
+// Personalize this options for your usage.
+const cookieOptions = {
+	path: '/',
+	httpOnly: true,
+	sameSite: 'lax' as const,
+	maxAge: 24 * 60 * 60 * 1000 * 30,
+	secrets: ['THISSHOULDBESECRET_AND_NOT_SHARED'],
+	secure: process.env.NODE_ENV !== 'development',
+};
+
+const sessionStorage = createCookieSessionStorage({
+	cookie: cookieOptions,
+});
+
+export const authenticator = new Authenticator<string>(sessionStorage, {
+	throwOnError: true,
+});
+
+const linkedinStrategy = new LinkedinStrategy(
+   {
+      clientID: "YOUR_CLIENT_ID",
+      clientSecret: "YOUR_CLIENT_SECRET",
+      callbackURL: "https://example.com/auth/linkedin/callback";
+   },
+   async ({accessToken, refreshToken, extraParams, profile, context}) => {
+      // Check the LinkedinProfile type to see how the `profile` looks like.
+
+      // Get the user data from your DB or API using the tokens and profile
+      return User.findOrCreate({ email: profile.email });
+   }
+);
+
+authenticator.use(linkedinStrategy, 'linkedin');
+```
+
+### Setup your routes
+
+```tsx
+// app/routes/login.tsx
+export default function Login() {
+   return (
+      <Form action="/auth/linkedin" method="post">
+         <button>Login with Linkedin</button>
+      </Form>
+   )
+}
+```
+
+```tsx
+// app/routes/auth/linkedin.tsx
+import { ActionFunction, LoaderFunction } from 'remix'
+import { authenticator } from '~/linkedin.server'
+
+export let loader: LoaderFunction = () => redirect('/login')
+export let action: ActionFunction = ({ request }) => {
+   return authenticator.authenticate('linkedin', request)
+}
+```
+
+```tsx
+// app/routes/auth/linkedin/callback.tsx
+import { ActionFunction, LoaderFunction } from 'remix'
+import { authenticator } from '~/linkedin.server'
+
+export let loader: LoaderFunction = ({ request }) => {
+   return authenticator.authenticate('linkedin', request, {
+      successRedirect: '/dashboard',
+      failureRedirect: '/login',
+   })
+}
 ```
