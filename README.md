@@ -47,6 +47,8 @@ const linkedinStrategy = new LinkedinStrategy(
    {
       clientID: "YOUR_CLIENT_ID",
       clientSecret: "YOUR_CLIENT_SECRET",
+      // LinkedIn is expecting a full URL here, not a relative path
+      // see: https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow?tabs=HTTPS1#step-1-configure-your-application
       callbackURL: "https://example.com/auth/linkedin/callback";
    },
    async ({accessToken, refreshToken, extraParams, profile, context}) => {
