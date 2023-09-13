@@ -121,6 +121,7 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
     return new URLSearchParams({
       scope: this.scope.join(LinkedInStrategyScopeSeparator),
       redirect_uri: this.redirect_uri,
+      response_type: "code",
     });
   }
 
