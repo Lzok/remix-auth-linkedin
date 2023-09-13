@@ -5,206 +5,29 @@ import type {
 } from "remix-auth-oauth2";
 import { OAuth2Strategy } from "remix-auth-oauth2";
 
-export const validScopes = [
-  "r_liteprofile",
-  "r_emailaddress",
-  "w_member_social",
-];
-export const defaultScope = "r_liteprofile r_emailaddress";
-
-/**
- * @param scopes
- * @param validScopes
- * @returns {boolean} if the scopes are invalid (true) or valid (false)
- */
-function validateScopes(scopes: string, validScopes: string[]): boolean {
-  const sc = scopes.split(" ");
-
-  return sc.some((x) => !validScopes.includes(x));
-}
+export type LinkedInScope = "openid" | "profile" | "email";
 
 /**
  * This type declares what configuration the strategy needs from the
  * developer to correctly work.
  * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow LinkedIn Auth Flow}
  */
-export type LinkedinStrategyOptions = {
+export type LinkedInStrategyOptions = {
   clientID: string;
   clientSecret: string;
   callbackURL: string;
   /**
-   * @default "r_liteprofile r_emailaddress"
+   * @default "openid profile email"
    * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/authentication/authentication?context=linkedin/context#permission-types Permisision}
    */
-  scope?: string;
+  scope?: LinkedInScope[] | string;
 };
-
-export type BaseProfileResponse = {
-  id: string;
-  localizedFirstName: string;
-  localizedLastName: string;
-};
-
-export type EmailElement = {
-  /**
-   * Inside this object lives the actual email address
-   */
-  "handle~": { emailAddress: string };
-  /**
-   * The URN representation of a member's handle.	Email Address URN.
-   * @example 'urn:li:emailAddress:1700000484'
-   * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/api-guide/concepts/urns URNS}
-   */
-  handle: string;
-};
-
-/**
- * @see {@link https://docs.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin#retrieving-member-email-address Retrieving Email Address}
- */
-export type EmailData = {
-  elements: EmailElement[];
-};
-
-/**
- * The authorization method for this artifact. Can be the following (string) enums:
- * @example
- * 'NONE' - The artifact can not be served to users.
- * 'PUBLIC' - The artifact is public and no authorization is needed to serve.
- * 'INTERNAL' - The artifact is only accessible internally to other systems in the hosting or processing infrastructure.
- * 'PRIVATE' - The artifact is private and only an authorized user can access it.
- */
-type AuthorizationMethod = "NONE" | "PUBLIC" | "INTERNAL" | "PRIVATE";
-
-type ProfilePictureIdentifier = {
-  /**
-   * @example
-   * https://media-exp1.licdn.com/dms/image/XXXXXXXXXXXXXXXXXXX/profile-displayphoto-shrink_100_100/0/1634222246589?e=1649289600&v=beta&t=QX8EDhTpAS4mNcHHsOrpzbs6QKZhkIEGbnNxVC39WnE
-   */
-  identifier: string;
-  index: number; // 0,
-  /**
-   * One of these media types.
-   * @see {@link https://www.iana.org/assignments/media-types/media-types.xhtml media types.}
-   * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/references/v2/digital-media-asset#asset-playable-streams-table Asset Playable Streams Table}
-   * @default application/octet-stream
-   * @example
-   * 'image/jpeg'
-   */
-  mediaType: string;
-  /**
-   * @example
-   * 'urn:li:digitalmediaFile:(urn:li:digitalmediaAsset:XXXXXXXXXXXXXXXXXXX,urn:li:digitalmediaArtifactClass:profile-displayphoto-shrink_100_100,0)'
-   */
-  file: string;
-  /**
-   * @example
-   * 'EXTERNAL_URL'
-   */
-  identifierType: string;
-  identifierExpiresInSeconds: number;
-};
-
-type ProfilePictureElement = {
-  artifact: string;
-  authorizationMethod: AuthorizationMethod;
-  data: {
-    "com.linkedin.digitalmedia.mediaartifact.StillImage": {
-      /**
-       * One of these media types.
-       * @see {@link https://www.iana.org/assignments/media-types/media-types.xhtml media types.}
-       * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/references/v2/digital-media-asset#asset-playable-streams-table Asset Playable Streams Table}
-       * @default application/octet-stream
-       * @example
-       * 'image/jpeg'
-       */
-      mediaType: string;
-      /**
-       * @example
-       * rawCodecSpec: { name: 'jpeg', type: 'image' }
-       */
-      rawCodecSpec: { name: string; type: string };
-      /**
-       * @example
-       * displaySize: { width: 100, uom: 'PX', height: 100 }
-       */
-      displaySize: {
-        width: number;
-        uom: string;
-        height: number;
-      };
-      /**
-       * @example
-       * storageSize: { width: 100, height: 100 }
-       */
-      storageSize: { width: number; height: number };
-      /**
-       * @example
-       * storageAspectRatio: { widthAspect: 1, heightAspect: 1, formatted: '1.00:1.00' }
-       */
-      storageAspectRatio: {
-        widthAspect: number;
-        heightAspect: number;
-        formatted: string;
-      };
-      /**
-       * @example
-       * displayAspectRatio: { widthAspect: 1, heightAspect: 1, formatted: '1.00:1.00' }
-       */
-      displayAspectRatio: {
-        widthAspect: number;
-        heightAspect: number;
-        formatted: string;
-      };
-    };
-  };
-  identifiers: ProfilePictureIdentifier[];
-};
-
-/**
- * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/references/v2/digital-media-asset Digital Media Asset Schema}
- */
-export type ProfilePictureData = {
-  profilePicture: {
-    /**
-     * The URN representation of a member's handle.	Email Address URN.
-     * @example 'urn:li:digitalmediaAsset:C4E00000FGrr3FrSVRg'
-     */
-    displayImage: string;
-    "displayImage~": {
-      paging: { count: number; start: number; links: [] };
-      elements: ProfilePictureElement[];
-    };
-  };
-};
-
-type LiteProfileData = BaseProfileResponse & ProfilePictureData;
-
-/**
- * This type declares what the developer will receive from the strategy
- * to verify the user identity in their system.
- *
- * @see {@link https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow#member-approves-request}
- */
-export type LinkedinStrategyVerifyParams = {
-  /**
-   * The OAuth 2.0 authorization code.
-   *
-   * The code is a value that you exchange with LinkedIn for an OAuth 2.0 access token in the next step of the authentication process.
-   * For security reasons, the authorization code has a 30-minute lifespan and must be used immediately.
-   * If it expires, you must repeat all of the previous steps to request another authorization code.
-   */
-  code: string;
-  /**
-   * A value used to test for possible CSRF attacks.
-   */
-  state: string;
-} & Record<string, string | number>;
 
 /**
  * In order to be complaint with the OAuth2Profile type as much as possible
  * based on the information Linkedin gives us.
  */
-export type LinkedinProfile = {
+export interface LinkedInProfile extends OAuth2Profile {
   id: string;
   displayName: string;
   name: {
@@ -213,32 +36,51 @@ export type LinkedinProfile = {
   };
   emails: Array<{ value: string }>;
   photos: Array<{ value: string }>;
-  _json: LiteProfileData & EmailData;
-} & OAuth2Profile;
+  _json: {
+    sub: string;
+    name: string;
+    given_name: string;
+    family_name: string;
+    picture: string;
+    locale: string;
+    email: string;
+    email_verified: boolean;
+  };
+}
+
+export type LinkedInExtraParams = {
+  scope: string;
+} & Record<string, string | number>;
+
+export const LinkedInStrategyDefaultScopes: LinkedInScope[] = [
+  "openid",
+  "profile",
+  "email",
+];
+export const LinkedInStrategyDefaultName = "linkedin";
+export const LinkedInStrategyScopeSeparator = " ";
 
 export class LinkedinStrategy<User> extends OAuth2Strategy<
   User,
-  LinkedinProfile
+  LinkedInProfile,
+  LinkedInExtraParams
 > {
-  public name = "linkedin";
+  public name = LinkedInStrategyDefaultName;
 
-  private readonly scope: string;
+  private readonly scope: LinkedInScope[];
   private readonly redirect_uri: string;
-  private readonly userInfoURL =
-    "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,profilePicture(displayImage~digitalmediaAsset:playableStreams))";
-  private readonly userEmailURL =
-    "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))";
+  private readonly userInfoURL = "https://api.linkedin.com/v2/userinfo";
 
   constructor(
     {
       clientID,
       clientSecret,
       callbackURL,
-      scope = defaultScope,
-    }: LinkedinStrategyOptions,
+      scope = LinkedInStrategyDefaultScopes,
+    }: LinkedInStrategyOptions,
     verify: StrategyVerifyCallback<
       User,
-      OAuth2StrategyVerifyParams<LinkedinProfile>
+      OAuth2StrategyVerifyParams<LinkedInProfile, LinkedInExtraParams>
     >
   ) {
     super(
@@ -252,18 +94,20 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
       verify
     );
 
-    if (scope !== defaultScope && validateScopes(scope, validScopes)) {
-      throw new Error(
-        `The scope is invalid. Remember valid ones are: ${validScopes.join(
-          ", "
-        )}`
-      );
-    }
-
+    this.scope = this.getScope(scope);
     this.redirect_uri = callbackURL;
-    this.scope = scope;
   }
 
+  // Allow users the option to pass a scope string, or typed array
+  private getScope(scope: LinkedInStrategyOptions["scope"]) {
+    if (!scope) {
+      return LinkedInStrategyDefaultScopes;
+    } else if (typeof scope === "string") {
+      return scope.split(LinkedInStrategyScopeSeparator) as LinkedInScope[];
+    }
+
+    return scope;
+  }
   /**
    * We override the protected authorizationParams method to return a new
    * URLSearchParams with custom params we want to send to the authorizationURL.
@@ -275,7 +119,7 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
    */
   protected authorizationParams(): URLSearchParams {
     return new URLSearchParams({
-      scope: this.scope,
+      scope: this.scope.join(LinkedInStrategyScopeSeparator),
       redirect_uri: this.redirect_uri,
     });
   }
@@ -287,41 +131,27 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
    *
    * @see {@link https://docs.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin#retrieving-member-email-address Retrieving Email Address}
    * @param accessToken
-   * @returns {LinkedinProfile} The Linkedin profile and the raw json response.
+   * @returns {LinkedInProfile} The Linkedin profile and the raw json response.
    */
-  protected async userProfile(accessToken: string): Promise<LinkedinProfile> {
-    const headers = { Authorization: `Bearer ${accessToken}` };
-
-    const responseFetcher = fetch(this.userInfoURL, { headers });
-    const emailFetcher = fetch(this.userEmailURL, { headers });
-
-    const [response, emailResponse] = await Promise.all([
-      responseFetcher,
-      emailFetcher,
-    ]);
-
-    const [baseData, emailData]: [LiteProfileData, EmailData] =
-      await Promise.all([response.json(), emailResponse.json()]);
-
-    const data = {
-      provider: this.name,
-      id: baseData.id,
-      displayName: `${baseData.localizedFirstName} ${baseData.localizedLastName}`,
-      name: {
-        givenName: baseData.localizedFirstName,
-        familyName: baseData.localizedLastName,
+  protected async userProfile(accessToken: string): Promise<LinkedInProfile> {
+    const response = await fetch(this.userInfoURL, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
-      emails: [{ value: emailData?.elements?.[0]?.["handle~"]?.emailAddress }],
-      photos: [
-        {
-          value:
-            baseData.profilePicture?.["displayImage~"]?.elements?.[0]
-              ?.identifiers?.[0]?.identifier,
-        },
-      ],
-      _json: { ...baseData, ...emailData },
+    });
+    const raw: LinkedInProfile["_json"] = await response.json();
+    const profile: LinkedInProfile = {
+      provider: "linkedin",
+      id: raw.sub,
+      displayName: raw.name,
+      name: {
+        familyName: raw.family_name,
+        givenName: raw.given_name,
+      },
+      emails: [{ value: raw.email }],
+      photos: [{ value: raw.picture }],
+      _json: raw,
     };
-
-    return data;
+    return profile;
   }
 }
