@@ -14,7 +14,7 @@ The Linkedin strategy is used to authenticate users against a Linkedin account. 
 
 ### Create an OAuth application
 
-First you need to create a new application in the [Linkedin's developers page](https://developer.linkedin.com/). Then I encourage you to read [this documentation page](https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow?tabs=HTTPS#prerequisites), it explains how to configure your app and gives you useful information on the auth flow.
+First you need to create a new application in the [Linkedin's developers page](https://developer.linkedin.com/). Then I encourage you to read [this documentation page](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2), it explains how to configure your app and gives you useful information on the auth flow.
 The app is mandatory in order to obtain a `clientID` and `client secret` to use with the Linkedin's API.
 
 ### Create the strategy instance
