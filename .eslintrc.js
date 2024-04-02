@@ -6,7 +6,6 @@ module.exports = {
   extends: [
     "plugin:unicorn/recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
   ],
   rules: {
     "prefer-const": "off",

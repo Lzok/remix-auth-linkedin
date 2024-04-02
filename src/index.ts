@@ -52,13 +52,13 @@ export type LinkedInExtraParams = {
   scope: string;
 } & Record<string, string | number>;
 
-export const LinkedInStrategyDefaultScopes: LinkedInScope[] = [
+export const LinkedInStrategyDefaultName = "linkedin";
+export const LinkedInStrategyScopeSeparator = " ";
+export const LinkedInStrategyDefaultScopes: string = [
   "openid",
   "profile",
   "email",
-];
-export const LinkedInStrategyDefaultName = "linkedin";
-export const LinkedInStrategyScopeSeparator = " ";
+].join(LinkedInStrategyScopeSeparator);
 
 export class LinkedinStrategy<User> extends OAuth2Strategy<
   User,
@@ -67,7 +67,6 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
 > {
   public name = LinkedInStrategyDefaultName;
 
-  private readonly scope: LinkedInScope[];
   private readonly redirect_uri: string;
   private readonly userInfoURL = "https://api.linkedin.com/v2/userinfo";
 
@@ -99,11 +98,11 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
   }
 
   // Allow users the option to pass a scope string, or typed array
-  private getScope(scope: LinkedInStrategyOptions["scope"]) {
+  private getScope(scope: LinkedInStrategyOptions["scope"]): string {
     if (!scope) {
       return LinkedInStrategyDefaultScopes;
-    } else if (typeof scope === "string") {
-      return scope.split(LinkedInStrategyScopeSeparator) as LinkedInScope[];
+    } else if (Array.isArray(scope)) {
+      return scope.join(LinkedInStrategyScopeSeparator);
     }
 
     return scope;
@@ -119,7 +118,7 @@ export class LinkedinStrategy<User> extends OAuth2Strategy<
    */
   protected authorizationParams(): URLSearchParams {
     return new URLSearchParams({
-      scope: this.scope.join(LinkedInStrategyScopeSeparator),
+      scope: this.scope || LinkedInStrategyDefaultScopes,
       redirect_uri: this.redirect_uri,
       response_type: "code",
     });
