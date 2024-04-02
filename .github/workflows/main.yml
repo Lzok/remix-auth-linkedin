@@ -37,7 +37,7 @@ jobs:
       - name: Use Node 18
         uses: actions/setup-node@v1
         with:
-          node-version: 84
+          node-version: 18
 
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
